@@ -1,0 +1,50 @@
+
+services:
+  # PostgreSQL único para dados e Metabase
+  postgres-extra:
+    image: postgres:15
+    container_name: astro_postgres_extra
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: analytics
+    ports:
+      - "5433:5432"  # Porta diferente para não conflitar
+    volumes:
+      - postgres_extra_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - airflow
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Serviço Metabase
+  metabase:
+    image: metabase/metabase:latest
+    container_name: astro_metabase
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase_app
+      MB_DB_PORT: 5432
+      MB_DB_USER: postgres
+      MB_DB_PASS: postgres
+      MB_DB_HOST: postgres-extra
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres-extra:
+        condition: service_healthy
+    networks:
+      - airflow
+    volumes:
+      - metabase_data:/metabase-data
+
+volumes:
+  postgres_extra_data:
+  metabase_data:
+
+networks:
+  airflow:
