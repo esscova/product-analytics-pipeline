@@ -12,7 +12,7 @@ services:
       - "5433:5432"  # Porta diferente para não conflitar
     volumes:
       - postgres_extra_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./include/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - airflow
     healthcheck:
